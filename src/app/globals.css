@@ -1,0 +1,268 @@
+@import "tailwindcss";
+
+:root {
+  /* Primary */
+  --charcoal: #1A1A1A;
+  --safety-orange: #FF6B00;
+  --concrete-gray: #E8E4DF;
+
+  /* Secondary */
+  --steel-blue: #2C3E50;
+  --dust-white: #FAF8F5;
+  --caution-yellow: #FFB800;
+
+  /* Accents */
+  --success-green: #22C55E;
+  --danger-red: #EF4444;
+
+  /* Derived */
+  --orange-hover: #E55F00;
+  --orange-glow: rgba(255, 107, 0, 0.3);
+  --warm-shadow: rgba(26, 26, 26, 0.08);
+  --warm-shadow-lg: rgba(26, 26, 26, 0.12);
+
+  --background: var(--dust-white);
+  --foreground: var(--charcoal);
+}
+
+@theme inline {
+  --color-charcoal: var(--charcoal);
+  --color-safety-orange: var(--safety-orange);
+  --color-concrete-gray: var(--concrete-gray);
+  --color-steel-blue: var(--steel-blue);
+  --color-dust-white: var(--dust-white);
+  --color-caution-yellow: var(--caution-yellow);
+  --color-success-green: var(--success-green);
+  --color-danger-red: var(--danger-red);
+  --color-orange-hover: var(--orange-hover);
+  --font-display: var(--font-clash-display), 'Arial Black', sans-serif;
+  --font-body: var(--font-dm-sans), 'Helvetica Neue', sans-serif;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--dust-white);
+  color: var(--charcoal);
+  font-family: var(--font-body);
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ========================================
+   Custom Scrollbar
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--concrete-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--charcoal);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--steel-blue);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--charcoal) var(--concrete-gray);
+}
+
+/* ========================================
+   Keyframe Animations
+   ======================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+/* ========================================
+   Animation Utility Classes
+   ======================================== */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.animate-count-up {
+  animation: countUp 0.6s ease-out forwards;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Stagger delays */
+.animate-stagger-1,
+.animation-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animate-stagger-2,
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animate-stagger-3,
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
+.animate-stagger-4,
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animate-stagger-5,
+.animation-delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* ========================================
+   Form Styles
+   ======================================== */
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--safety-orange);
+  box-shadow: 0 0 0 3px var(--orange-glow);
+}
+
+/* ========================================
+   Quote Wizard Step Transitions
+   ======================================== */
+
+.step-enter {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.step-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+/* ========================================
+   Dark Mode (Admin Dashboard)
+   ======================================== */
+
+.dark {
+  --background: #0F0F0F;
+  --foreground: #E8E4DF;
+}
+
+.dark body,
+.dark {
+  background-color: #0F0F0F;
+  color: #E8E4DF;
+}
+
+.dark .card,
+.dark [data-card] {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
