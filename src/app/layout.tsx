@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DM_Sans, Inter } from 'next/font/google';
+import PinGate from '@/components/PinGate';
 import './globals.css';
 
 const dmSans = DM_Sans({
@@ -31,7 +32,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${dmSans.variable} ${inter.variable} h-full`}>
-      <body className="min-h-full font-body antialiased">{children}</body>
+      <body className="min-h-full font-body antialiased">
+        <PinGate>{children}</PinGate>
+      </body>
     </html>
   );
 }
