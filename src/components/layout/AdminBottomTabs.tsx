@@ -12,6 +12,7 @@ import {
   Truck,
   DollarSign,
   Settings,
+  BarChart3,
   X,
 } from 'lucide-react';
 
@@ -26,6 +27,7 @@ const moreTabs = [
   { href: '/admin/trucks', label: 'Trucks', icon: Truck },
   { href: '/admin/pricing', label: 'Pricing', icon: Settings },
   { href: '/admin/finances', label: 'Finances', icon: DollarSign },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 export default function AdminBottomTabs() {

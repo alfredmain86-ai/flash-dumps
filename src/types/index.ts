@@ -163,19 +163,52 @@ export interface Truck {
 
 export interface Invoice {
   id: string;
+  invoice_number: string; // INV-YYYY-NNN
   booking_id: string;
   customer_id: string;
   amount: number;
   tax_amount: number;
   total_amount: number;
   status: InvoiceStatus;
-  stripe_payment_id?: string;
-  stripe_invoice_id?: string;
+  payment_method?: PaymentMethod;
+  payment_reference?: string;
   due_date: string;
   paid_date?: string;
   created_at: string;
   booking?: Booking;
   customer?: Customer;
+}
+
+export type NotificationType = 'quote' | 'booking' | 'payment' | 'maintenance' | 'invoice';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  href?: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface MaintenanceRecord {
+  id: string;
+  truck_id: string;
+  date: string;
+  description: string;
+  cost: number;
+  mileage: number;
+  created_at: string;
+}
+
+export interface FuelLog {
+  id: string;
+  truck_id: string;
+  date: string;
+  gallons: number;
+  cost: number;
+  mileage: number;
+  created_at: string;
 }
 
 export interface PricingConfig {

@@ -11,6 +11,7 @@ import {
   Truck,
   DollarSign,
   Settings,
+  BarChart3,
 } from 'lucide-react';
 
 const sidebarLinks = [
@@ -21,6 +22,7 @@ const sidebarLinks = [
   { href: '/admin/trucks', label: 'Trucks', icon: Truck },
   { href: '/admin/pricing', label: 'Pricing', icon: Settings },
   { href: '/admin/finances', label: 'Finances', icon: DollarSign },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 export default function AdminSidebar() {

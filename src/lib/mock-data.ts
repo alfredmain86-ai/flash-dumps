@@ -6,6 +6,10 @@ import type {
   Expense,
   DashboardStats,
   Note,
+  Invoice,
+  AppNotification,
+  MaintenanceRecord,
+  FuelLog,
 } from '@/types';
 
 // ============================================
@@ -877,9 +881,146 @@ export const MOCK_EXPENSES: Expense[] = [
 // Lowercase aliases for API routes
 // ============================================
 
+// ============================================
+// Historical Bookings (30 days back)
+// ============================================
+
+const historicalAddresses = [
+  '1420 NW 7th Ave, Miami, FL 33136',
+  '3400 NW 36th St, Miami, FL 33142',
+  '5500 NW 72nd Ave, Miami, FL 33166',
+  '2800 NW 74th Ave, Miami, FL 33122',
+  '2200 Brickell Ave, Miami, FL 33129',
+  '7700 N Kendall Dr, Miami, FL 33156',
+  '6800 SW 40th St, Miami, FL 33155',
+  '4100 NW 27th Ave, Miami, FL 33142',
+  '9200 SW 72nd St, Miami, FL 33173',
+  '8901 SW 142nd Ave, Miami, FL 33186',
+];
+
+const wasteOptions: (typeof MOCK_BOOKINGS[0]['waste_types'])[] = [
+  ['concrete_brick', 'metal_rebar'], ['roofing_shingles'], ['mixed_debris'],
+  ['drywall_plaster', 'wood_lumber'], ['concrete_brick', 'tile_ceramic'],
+  ['wood_lumber'], ['mixed_debris', 'metal_rebar'], ['appliances_fixtures'],
+];
+
+const loadOptions: (typeof MOCK_BOOKINGS[0]['load_size'])[] = ['light', 'medium', 'heavy', 'full_truck'];
+const priceMap = { light: 225, medium: 325, heavy: 450, full_truck: 550 };
+
+for (let d = -30; d < -3; d++) {
+  const jobsPerDay = d % 7 === 0 || d % 7 === 6 ? 1 : Math.floor(Math.random() * 3) + 2;
+  for (let j = 0; j < jobsPerDay; j++) {
+    const custIdx = (Math.abs(d) + j) % MOCK_CUSTOMERS.length;
+    const truckIdx = j % 2;
+    const wasteIdx = (Math.abs(d) + j) % wasteOptions.length;
+    const loadIdx = (Math.abs(d) + j) % loadOptions.length;
+    const load = loadOptions[loadIdx];
+    const price = priceMap[load] + (Math.abs(d) % 5) * 25;
+    const bookId = `book-hist-${Math.abs(d)}-${j}`;
+
+    MOCK_BOOKINGS.push({
+      id: bookId,
+      quote_id: '',
+      customer_id: MOCK_CUSTOMERS[custIdx].id,
+      truck_id: MOCK_TRUCKS[truckIdx].id,
+      scheduled_date: dateOffset(d),
+      time_slot: j === 0 ? 'morning' : 'afternoon',
+      status: 'completed',
+      address: historicalAddresses[(Math.abs(d) + j) % historicalAddresses.length],
+      waste_types: wasteOptions[wasteIdx],
+      load_size: load,
+      estimated_price: price,
+      final_price: price,
+      actual_weight: +(1.2 + Math.random() * 1.5).toFixed(1),
+      completion_photos: [],
+      created_at: isoOffset(d - 2),
+      updated_at: isoOffset(d),
+      customer: MOCK_CUSTOMERS[custIdx],
+      truck: MOCK_TRUCKS[truckIdx],
+    });
+  }
+}
+
+// ============================================
+// Invoices
+// ============================================
+
+function invoiceNum(n: number): string {
+  return `INV-2026-${String(n).padStart(3, '0')}`;
+}
+
+const completedBookings = MOCK_BOOKINGS.filter((b) => b.status === 'completed');
+
+export const MOCK_INVOICES: Invoice[] = completedBookings.slice(0, 20).map((b, i) => {
+  const amount = b.final_price ?? b.estimated_price;
+  const isPaid = i < 14;
+  const isOverdue = !isPaid && i < 17;
+  return {
+    id: `inv-${String(i + 1).padStart(3, '0')}`,
+    invoice_number: invoiceNum(i + 1),
+    booking_id: b.id,
+    customer_id: b.customer_id,
+    amount,
+    tax_amount: 0,
+    total_amount: amount,
+    status: isPaid ? 'paid' : isOverdue ? 'overdue' : 'sent',
+    payment_method: isPaid ? (['zelle', 'check', 'cash', 'wire'] as const)[i % 4] : undefined,
+    due_date: dateOffset(-30 + i * 2),
+    paid_date: isPaid ? dateOffset(-28 + i * 2) : undefined,
+    created_at: isoOffset(-30 + i),
+    customer: MOCK_CUSTOMERS.find((c) => c.id === b.customer_id),
+    booking: b,
+  };
+});
+
+// ============================================
+// Notifications
+// ============================================
+
+export const MOCK_NOTIFICATIONS: AppNotification[] = [
+  { id: 'notif-001', type: 'quote', title: 'New Quote Request', message: 'Ana Gutierrez submitted a new quote for tile removal', href: '/admin/quotes/quote-004', read: false, created_at: isoOffset(0) },
+  { id: 'notif-002', type: 'quote', title: 'New Quote Request', message: 'David Lopez needs emergency mixed debris pickup', href: '/admin/quotes/quote-011', read: false, created_at: isoOffset(0) },
+  { id: 'notif-003', type: 'quote', title: 'New Quote Request', message: 'Luis Perez submitted roofing + wood debris quote', href: '/admin/quotes/quote-014', read: false, created_at: isoOffset(0) },
+  { id: 'notif-004', type: 'booking', title: 'Job Completed', message: 'Flash 1 completed job at 1420 NW 7th Ave', href: '/admin/bookings/book-005', read: true, created_at: isoOffset(-1) },
+  { id: 'notif-005', type: 'booking', title: 'Job Completed', message: 'Flash 2 completed roofing pickup at NW 36th St', href: '/admin/bookings/book-006', read: true, created_at: isoOffset(-1) },
+  { id: 'notif-006', type: 'invoice', title: 'Invoice Overdue', message: 'INV-2026-015 for James Mitchell is 5 days past due', href: '/admin/finances', read: false, created_at: isoOffset(-2) },
+  { id: 'notif-007', type: 'payment', title: 'Payment Received', message: 'Carlos Hernandez paid $425 via Zelle', read: true, created_at: isoOffset(-1) },
+  { id: 'notif-008', type: 'maintenance', title: 'Maintenance Due Soon', message: 'Flash 2 maintenance due in 5 days', href: '/admin/trucks', read: false, created_at: isoOffset(-1) },
+];
+
+// ============================================
+// Maintenance Records
+// ============================================
+
+export const MOCK_MAINTENANCE: MaintenanceRecord[] = [
+  { id: 'maint-001', truck_id: 'truck-001', date: dateOffset(-4), description: 'Brake pad replacement', cost: 450, mileage: 85200, created_at: isoOffset(-4) },
+  { id: 'maint-002', truck_id: 'truck-002', date: dateOffset(-20), description: 'Oil change and filter', cost: 185, mileage: 141800, created_at: isoOffset(-20) },
+  { id: 'maint-003', truck_id: 'truck-001', date: dateOffset(-45), description: 'Tire rotation and alignment', cost: 320, mileage: 84600, created_at: isoOffset(-45) },
+  { id: 'maint-004', truck_id: 'truck-002', date: dateOffset(-60), description: 'Hydraulic lift service', cost: 780, mileage: 140200, created_at: isoOffset(-60) },
+  { id: 'maint-005', truck_id: 'truck-001', date: dateOffset(-90), description: 'Oil change and filter', cost: 185, mileage: 83100, created_at: isoOffset(-90) },
+];
+
+// ============================================
+// Fuel Logs
+// ============================================
+
+export const MOCK_FUEL_LOGS: FuelLog[] = [];
+for (let w = 0; w < 8; w++) {
+  MOCK_FUEL_LOGS.push(
+    { id: `fuel-${w * 2 + 1}`, truck_id: 'truck-001', date: dateOffset(-w * 4), gallons: 42 + (w % 3) * 5, cost: 145 + (w % 3) * 15, mileage: 85200 - w * 320, created_at: isoOffset(-w * 4) },
+    { id: `fuel-${w * 2 + 2}`, truck_id: 'truck-002', date: dateOffset(-w * 4 - 1), gallons: 38 + (w % 3) * 4, cost: 132 + (w % 3) * 12, mileage: 142100 - w * 280, created_at: isoOffset(-w * 4 - 1) },
+  );
+}
+
+// ============================================
+// Lowercase aliases for API routes
+// ============================================
+
 export const mockCustomers = MOCK_CUSTOMERS;
 export const mockQuotes = MOCK_QUOTES;
 export const mockBookings = MOCK_BOOKINGS;
 export const mockTrucks = MOCK_TRUCKS;
 export const mockExpenses = MOCK_EXPENSES;
 export const mockDashboardStats = MOCK_DASHBOARD_STATS;
+export const mockInvoices = MOCK_INVOICES;
+export const mockNotifications = MOCK_NOTIFICATIONS;
