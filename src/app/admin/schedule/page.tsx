@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Badge, Modal, Button } from '@/components/ui';
-import { MOCK_BOOKINGS, MOCK_TRUCKS } from '@/lib/mock-data';
+import Link from 'next/link';
+import { Badge } from '@/components/ui';
+import { useAdminStore } from '@/store/admin';
 import { WASTE_TYPE_INFO, LOAD_SIZE_INFO, TIME_SLOT_INFO } from '@/types';
-import type { Booking } from '@/types';
 import { formatCurrency } from '@/lib/constants';
-import { ChevronLeft, ChevronRight, MapPin, Clock, Truck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Truck, Plus } from 'lucide-react';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -19,19 +19,6 @@ const STATUS_COLORS: Record<string, string> = {
   completed: 'bg-[#22C55E]/20 border-[#22C55E]/40 text-[#22C55E]',
   cancelled: 'bg-[#EF4444]/20 border-[#EF4444]/40 text-[#EF4444]',
 };
-
-function statusToBadgeVariant(status: string) {
-  const map: Record<string, 'completed' | 'confirmed' | 'pending' | 'cancelled' | 'in-progress' | 'default'> = {
-    scheduled: 'pending',
-    confirmed: 'confirmed',
-    en_route: 'in-progress',
-    arrived: 'in-progress',
-    loading: 'in-progress',
-    completed: 'completed',
-    cancelled: 'cancelled',
-  };
-  return map[status] ?? 'default';
-}
 
 function getWeekDays(baseDate: Date): Date[] {
   const day = baseDate.getDay();
@@ -73,9 +60,8 @@ function getMonthDays(baseDate: Date): Date[] {
 export default function SchedulePage() {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
-  const trucks = MOCK_TRUCKS;
+  const { bookings, trucks } = useAdminStore();
 
   const navigate = (direction: number) => {
     const d = new Date(currentDate);
@@ -90,8 +76,8 @@ export default function SchedulePage() {
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
 
   const bookingsByDateAndTruck = useMemo(() => {
-    const map: Record<string, Record<string, Booking[]>> = {};
-    for (const booking of MOCK_BOOKINGS) {
+    const map: Record<string, Record<string, typeof bookings>> = {};
+    for (const booking of bookings) {
       const dateKey = booking.scheduled_date;
       if (!map[dateKey]) map[dateKey] = {};
       const truckId = booking.truck_id ?? 'unassigned';
@@ -99,7 +85,7 @@ export default function SchedulePage() {
       map[dateKey][truckId].push(booking);
     }
     return map;
-  }, []);
+  }, [bookings]);
 
   const headerLabel = useMemo(() => {
     if (viewMode === 'day') {
@@ -120,11 +106,18 @@ export default function SchedulePage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#E8E4DF]">Schedule</h1>
-          <p className="text-white/50 mt-1">Manage bookings and truck assignments</p>
+          <h1 className="text-2xl font-bold">Schedule</h1>
+          <p className="text-white/50 text-sm mt-0.5">Manage bookings and truck assignments</p>
         </div>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/admin/bookings/new"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FF6B00] hover:bg-[#E55F00] text-white text-xs font-semibold min-h-[40px] transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            New Booking
+          </Link>
           {/* View mode toggle */}
           <div className="flex rounded-xl border border-white/[0.08] overflow-hidden">
             {(['day', 'week', 'month'] as ViewMode[]).map((mode) => (
@@ -215,10 +208,10 @@ export default function SchedulePage() {
                           }`}
                         >
                           {dayBookings.map((booking) => (
-                            <button
+                            <Link
                               key={booking.id}
-                              onClick={() => setSelectedBooking(booking)}
-                              className={`w-full text-left rounded-lg border p-1.5 mb-1 text-xs cursor-pointer transition-opacity hover:opacity-80 ${
+                              href={`/admin/bookings/${booking.id}`}
+                              className={`block w-full text-left rounded-lg border p-1.5 mb-1 text-xs transition-opacity hover:opacity-80 ${
                                 STATUS_COLORS[booking.status] ?? 'bg-white/[0.06] border-white/[0.1] text-white/50'
                               }`}
                             >
@@ -228,7 +221,7 @@ export default function SchedulePage() {
                               <p className="truncate opacity-80">
                                 {TIME_SLOT_INFO[booking.time_slot]?.label}
                               </p>
-                            </button>
+                            </Link>
                           ))}
                         </div>
                       );
@@ -261,10 +254,10 @@ export default function SchedulePage() {
                   ) : (
                     <div className="space-y-2 pl-6 pb-4">
                       {dayBookings.map((booking) => (
-                        <button
+                        <Link
                           key={booking.id}
-                          onClick={() => setSelectedBooking(booking)}
-                          className={`w-full text-left rounded-xl border p-3 cursor-pointer transition-opacity hover:opacity-80 ${
+                          href={`/admin/bookings/${booking.id}`}
+                          className={`block w-full text-left rounded-xl border p-3 transition-opacity hover:opacity-80 ${
                             STATUS_COLORS[booking.status] ?? 'bg-white/[0.06] border-white/[0.1] text-white/50'
                           }`}
                         >
@@ -281,7 +274,7 @@ export default function SchedulePage() {
                               {formatCurrency(booking.estimated_price)}
                             </span>
                           </div>
-                        </button>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -334,15 +327,15 @@ export default function SchedulePage() {
                             {day.getDate()}
                           </p>
                           {allBookings.slice(0, 2).map((booking) => (
-                            <button
+                            <Link
                               key={booking.id}
-                              onClick={() => setSelectedBooking(booking)}
-                              className={`w-full text-left rounded text-[10px] px-1 py-0.5 mb-0.5 truncate cursor-pointer border ${
+                              href={`/admin/bookings/${booking.id}`}
+                              className={`block w-full text-left rounded text-[10px] px-1 py-0.5 mb-0.5 truncate border ${
                                 STATUS_COLORS[booking.status] ?? 'bg-white/[0.06] border-white/[0.1]'
                               }`}
                             >
                               {booking.customer?.name ?? 'Customer'}
-                            </button>
+                            </Link>
                           ))}
                           {allBookings.length > 2 && (
                             <p className="text-[10px] text-white/30 px-1">
@@ -360,94 +353,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {/* Booking Detail Modal */}
-      <Modal
-        open={!!selectedBooking}
-        onClose={() => setSelectedBooking(null)}
-        title="Booking Details"
-        maxWidth="lg"
-      >
-        {selectedBooking && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {selectedBooking.customer?.name ?? 'Customer'}
-              </h3>
-              <Badge variant={statusToBadgeVariant(selectedBooking.status)}>
-                {selectedBooking.status.replace('_', ' ')}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500 flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" /> Address
-                </p>
-                <p className="font-medium">{selectedBooking.address}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" /> Time Slot
-                </p>
-                <p className="font-medium">
-                  {TIME_SLOT_INFO[selectedBooking.time_slot]?.label} ({TIME_SLOT_INFO[selectedBooking.time_slot]?.description})
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Date</p>
-                <p className="font-medium">{selectedBooking.scheduled_date}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 flex items-center gap-1">
-                  <Truck className="h-3.5 w-3.5" /> Truck
-                </p>
-                <p className="font-medium">
-                  {selectedBooking.truck?.name ?? 'Unassigned'}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Waste Types</p>
-                <p className="font-medium">
-                  {selectedBooking.waste_types
-                    .map((wt) => WASTE_TYPE_INFO[wt]?.label)
-                    .join(', ')}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Load Size</p>
-                <p className="font-medium">
-                  {LOAD_SIZE_INFO[selectedBooking.load_size]?.label}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Estimated Price</p>
-                <p className="text-lg font-bold text-[#FF6B00]">
-                  {formatCurrency(selectedBooking.estimated_price)}
-                </p>
-              </div>
-              {selectedBooking.final_price && (
-                <div>
-                  <p className="text-gray-500">Final Price</p>
-                  <p className="text-lg font-bold text-[#22C55E]">
-                    {formatCurrency(selectedBooking.final_price)}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {selectedBooking.special_instructions && (
-              <div className="rounded-xl bg-[#FFB800]/10 border border-[#FFB800]/20 p-3">
-                <p className="text-xs font-semibold text-[#FFB800] mb-1">
-                  Special Instructions
-                </p>
-                <p className="text-sm text-[#FFB800]/80">
-                  {selectedBooking.special_instructions}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

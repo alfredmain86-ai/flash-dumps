@@ -2,19 +2,20 @@
 
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/constants';
-import { MOCK_BOOKINGS, MOCK_EXPENSES } from '@/lib/mock-data';
+import { useAdminStore } from '@/store/admin';
 
 type Period = 'week' | 'month' | 'quarter';
 
 export default function FinancesPage() {
   const [period, setPeriod] = useState<Period>('month');
+  const { bookings, expenses } = useAdminStore();
 
-  const completedBookings = MOCK_BOOKINGS.filter((b) => b.status === 'completed');
+  const completedBookings = bookings.filter((b) => b.status === 'completed');
   const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.final_price ?? b.estimated_price), 0);
-  const totalExpenses = MOCK_EXPENSES.reduce((sum, e) => sum + e.amount, 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   const profit = totalRevenue - totalExpenses;
 
-  const expensesByCategory = MOCK_EXPENSES.reduce<Record<string, number>>((acc, e) => {
+  const expensesByCategory = expenses.reduce<Record<string, number>>((acc, e) => {
     acc[e.category] = (acc[e.category] || 0) + e.amount;
     return acc;
   }, {});
@@ -64,7 +65,7 @@ export default function FinancesPage() {
         <div className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6">
           <p className="text-sm text-white/50 mb-1">Total Expenses</p>
           <p className="text-3xl font-bold text-[#EF4444]">{formatCurrency(totalExpenses)}</p>
-          <p className="text-sm text-white/30 mt-1">{MOCK_EXPENSES.length} recorded expenses</p>
+          <p className="text-sm text-white/30 mt-1">{expenses.length} recorded expenses</p>
         </div>
         <div className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-6">
           <p className="text-sm text-white/50 mb-1">Net Profit</p>
@@ -141,7 +142,7 @@ export default function FinancesPage() {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_EXPENSES.slice(0, 10).map((expense) => (
+                {expenses.slice(0, 10).map((expense) => (
                   <tr key={expense.id} className="border-b border-white/[0.03]">
                     <td className="py-2.5 text-white/50">{expense.date}</td>
                     <td className="py-2.5 text-[#E8E4DF]">{categoryLabels[expense.category] || expense.category}</td>

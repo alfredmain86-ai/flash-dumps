@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui';
-import { MOCK_TRUCKS, MOCK_BOOKINGS } from '@/lib/mock-data';
+import { useAdminStore } from '@/store/admin';
 import { TIME_SLOT_INFO } from '@/types';
 import type { TruckStatus } from '@/types';
 import { formatCurrency } from '@/lib/constants';
@@ -38,6 +38,7 @@ function bookingStatusBadge(status: string) {
 }
 
 export default function TrucksPage() {
+  const { trucks: MOCK_TRUCKS, bookings: MOCK_BOOKINGS } = useAdminStore();
   const todayStr = new Date().toISOString().split('T')[0];
 
   const truckSchedules = useMemo(() => {
@@ -48,7 +49,7 @@ export default function TrucksPage() {
       );
     }
     return map;
-  }, [todayStr]);
+  }, [todayStr, MOCK_TRUCKS, MOCK_BOOKINGS]);
 
   return (
     <div className="space-y-6">

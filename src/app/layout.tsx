@@ -33,6 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${dmSans.variable} ${inter.variable} h-full`}>
       <body className="min-h-full font-body antialiased">
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         <PinGate>{children}</PinGate>
       </body>
     </html>

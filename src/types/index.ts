@@ -44,7 +44,13 @@ export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 export type TruckStatus = 'available' | 'in_use' | 'maintenance';
 
-export type CustomerTag = 'one_time' | 'recurring' | 'contractor' | 'homeowner' | 'vip';
+export type CustomerTag = 'one_time' | 'recurring' | 'contractor' | 'homeowner' | 'vip' | 'slow_payer';
+
+export type CustomerType = 'residential' | 'commercial';
+
+export type CreditTerms = 'cod' | 'net_15' | 'net_30';
+
+export type PaymentMethod = 'cash' | 'zelle' | 'wire' | 'check' | 'card';
 
 // --- Interfaces ---
 
@@ -57,6 +63,13 @@ export interface User {
   created_at: string;
 }
 
+export interface Note {
+  id: string;
+  content: string;
+  created_at: string;
+  author: string;
+}
+
 export interface Customer {
   id: string;
   user_id?: string;
@@ -65,9 +78,14 @@ export interface Customer {
   email: string;
   address?: string;
   company_name?: string;
-  customer_type: 'residential' | 'commercial';
+  customer_type: CustomerType;
   tags: CustomerTag[];
   notes?: string;
+  internal_notes: Note[];
+  internal_rating?: number; // 1-5
+  credit_terms: CreditTerms;
+  preferred_payment?: PaymentMethod;
+  job_site_addresses: string[];
   preferred_language: 'en' | 'es';
   created_at: string;
   total_jobs: number;
@@ -76,6 +94,7 @@ export interface Customer {
 
 export interface Quote {
   id: string;
+  reference: string; // FD-YYYY-NNN
   customer_id?: string;
   customer_name: string;
   customer_email: string;
@@ -96,6 +115,7 @@ export interface Quote {
   distance_miles?: number;
   status: QuoteStatus;
   notes?: string;
+  activity_log: Note[];
   created_at: string;
   updated_at: string;
 }

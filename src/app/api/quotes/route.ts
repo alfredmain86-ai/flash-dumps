@@ -118,8 +118,11 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString();
 
+    const quoteId = uuidv4();
     const newQuote: Quote = {
-      id: uuidv4(),
+      id: quoteId,
+      reference: `FD-${new Date().getFullYear()}-${quoteId.slice(0, 3).toUpperCase()}`,
+      activity_log: [{ id: uuidv4(), content: 'Quote created', created_at: now, author: 'System' }],
       customer_name: customerName,
       customer_email: customerEmail,
       customer_phone: customerPhone,
